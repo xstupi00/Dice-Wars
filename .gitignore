@@ -1,0 +1,5 @@
+.idea/
+dicewars/__pycache__/
+dicewars/server/__pycache__/
+dicewars/server/game/__pycache__/
+scripts/__pycache__/
