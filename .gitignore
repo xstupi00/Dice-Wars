@@ -1,7 +1,4 @@
 .idea/
 env-sui/
-dicewars/dicewars/ai/__pycache__/*
-dicewars/dicewars/client/__pycache__/*
-dicewars/dicewars/client/game/__pycache__/*
-dicewars/dicewars/server/game/__pycache__/*
-dicewars/dicewars/ai/xdusek27.py
+*/logs/
+*__pycache__*
