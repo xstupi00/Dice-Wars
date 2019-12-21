@@ -58,14 +58,14 @@ class AI:
 
             # more is better
             lose_penalty = (PENALTY_EVAL_WEIGHT * lose_board_evaluation +
-                         PENALTY_HOLD_WEIGHT * holding_source_probability) / 2
+                            PENALTY_HOLD_WEIGHT * holding_source_probability) / 2
 
             # more is better
             attack_coeff = (EVAL_WEIGHT * win_board_evaluation + SUCC_WEIGHT * successful_attack_probability +
-                         HOLD_WEIGHT * holding_attack_area_probability + LOSE_WEIGHT * lose_penalty) / 4
+                            HOLD_WEIGHT * holding_attack_area_probability + LOSE_WEIGHT * lose_penalty) / 4
 
             self.logger.debug("source: " + str(source.get_dice()) + "   target: " + str(target.get_dice()) +
-                              "  win_value = " + str(attack_coeff) + "   eval = " + str(win_board_evaluation) +
+                              "  attack_coeff = " + str(attack_coeff) + "   eval = " + str(win_board_evaluation) +
                               "   attack_prob = " + str(successful_attack_probability) + "  hold_prob = " +
                               str(holding_attack_area_probability) + "  lose = " + str(lose_penalty))
 
@@ -89,11 +89,8 @@ class AI:
         DICES_WEIGHT = 1 / 20
 
         max_score = len(board.areas)
-
         total_dices = sum([board.get_player_dice(player) for player in self.players_order])
-
         player_dices = board.get_player_dice(player_name)
-
         player_score = self.get_score_by_player(board, self.player_name)
 
         enemies = {}
@@ -108,8 +105,8 @@ class AI:
 
         evaluation = (SCORE_WEIGHT * math.sqrt((player_score / max_score) / max_score) +
                       DICES_WEIGHT * math.sqrt((player_dices / total_dices) / 8 * max_score) +
-                      SCORE_WEIGHT * math.sqrt((enemies_score / max_score) / max_score) +
-                      DICES_WEIGHT * math.sqrt((enemies_dices / total_dices) / 8 * max_score)) / 4
+                      SCORE_WEIGHT * (1 - math.sqrt((enemies_score / max_score) / max_score)) +
+                      DICES_WEIGHT * (1 - math.sqrt((enemies_dices / total_dices) / 8 * max_score))) / 4
 
         return evaluation
 
