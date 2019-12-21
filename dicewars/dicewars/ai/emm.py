@@ -26,10 +26,10 @@ class AI:
         ATTACK_WEIGHT = 0.85
         HOLD_WEIGHT = 0.15
 
-        ATTACK_HOLD_WEIGHT = 0.5
-        DIFF_WIN_WEIGHT = 0.25
-        DIFF_LOSE_WEIGHT = 0.125
-        LOSE_HOLD_WEIGHT = 0.125
+        ATTACK_HOLD_WEIGHT = 0.75 - self.get_aggresivity(board) * 0.25
+        DIFF_WIN_WEIGHT = (1 - ATTACK_HOLD_WEIGHT) / 2
+        DIFF_LOSE_WEIGHT = (1 - ATTACK_HOLD_WEIGHT) / 4
+        LOSE_HOLD_WEIGHT = (1 - ATTACK_HOLD_WEIGHT) / 4
 
         attack_hold_prob = []
         diff_eval_win = []
@@ -112,6 +112,13 @@ class AI:
             return BattleCommand(possible_actions[0][0], possible_actions[0][1])
         else:
             return EndTurnCommand()
+
+    @staticmethod
+    def get_aggresivity(board):
+        ENEMIES = 7
+        enemies_alive = set()
+        [enemies_alive.add(area.owner_name) for area in board.areas.values()]
+        return 1 - math.sqrt(len(enemies_alive) / ENEMIES - 1 / ENEMIES)
 
     def evaluate(self, board, player_name):
         """ Evaluate the state of the game from the player perspective
