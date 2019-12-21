@@ -106,10 +106,10 @@ class AI:
         enemies_score = sum(enemy["score"] for enemy in enemies.values())
         enemies_dices = sum(enemy["dices"] for enemy in enemies.values())
 
-        evaluation = (SCORE_WEIGHT * math.log10(player_score / max_score + 1) +
-                      DICES_WEIGHT * math.log10(player_dices / total_dices + 1) +
-                      SCORE_WEIGHT * math.log10(enemies_score / max_score + 1) +
-                      DICES_WEIGHT * math.log10(enemies_dices / total_dices + 1)) / 4
+        evaluation = (SCORE_WEIGHT * math.sqrt((player_score / max_score) / max_score) +
+                      DICES_WEIGHT * math.sqrt((player_dices / total_dices) / 8 * max_score) +
+                      SCORE_WEIGHT * math.sqrt((enemies_score / max_score) / max_score) +
+                      DICES_WEIGHT * math.sqrt((enemies_dices / total_dices) / 8 * max_score)) / 4
 
         return evaluation
 
