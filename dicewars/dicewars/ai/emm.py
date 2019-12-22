@@ -22,12 +22,12 @@ class AI:
 
     def get_command(self, board):
 
-        WIN_COEFF_DOWN_THRESHOLD = 0.175 + self.get_border_of_threshold(board) * 0.125
-        WIN_COEFF_UP_THRESHOLD = 0.2 + self.get_border_of_threshold(board) * 0.2
+        WIN_COEFF_DOWN_THRESHOLD = 0.1 + self.get_border_of_threshold(board) * 0.1
+        WIN_COEFF_UP_THRESHOLD = 0.15 + self.get_border_of_threshold(board) * 0.1
         WIN_COEFF_THRESHOLD = random.uniform(WIN_COEFF_DOWN_THRESHOLD, WIN_COEFF_UP_THRESHOLD)
 
         # y = 0.1 * x
-        HOLD_WEIGHT = 0.1 * self.get_alive_players(board)
+        HOLD_WEIGHT = 0.1 + self.get_border_of_threshold(board) * 0.9
         ATTACK_WEIGHT = 1 - HOLD_WEIGHT
 
         ATTACK_HOLD_WEIGHT = 0.75 - self.get_aggresivity(board) * 0.25
@@ -60,12 +60,16 @@ class AI:
             # 1) attack_hold_prob
 
             attack_prob = probability_of_successful_attack(board, source_name_int, target_name_int)
-            hold_prob = probability_of_holding_area(
-                board, target_name_int, win_board.areas[target_name_str].get_dice(), self.player_name
+            hold_target_prob = probability_of_holding_area(
+                win_board, target_name_int, win_board.areas[target_name_str].get_dice(), self.player_name
             )
-            attack_hold_coeff = (ATTACK_WEIGHT * attack_prob + HOLD_WEIGHT * hold_prob) / 2
+            hold_source_prob = probability_of_holding_area(
+                win_board, source_name_int, win_board.areas[source_name_str].get_dice(), self.player_name
+            )
+            attack_hold_coeff = (ATTACK_WEIGHT * attack_prob + 2 / 3 * HOLD_WEIGHT * hold_target_prob
+                                 + 1 / 3 * HOLD_WEIGHT * hold_source_prob) / 3
 
-            if attack_hold_coeff > WIN_COEFF_THRESHOLD:
+            if attack_hold_coeff > WIN_COEFF_THRESHOLD and attack_prob > 0.19170096:
                 attack_hold_prob.append((source_name_int, target_name_int, attack_hold_coeff))
 
                 # 2) diff_eval_win
@@ -83,15 +87,14 @@ class AI:
                 # 4) lose_hold_prob
 
                 lose_hold_prob_coeff = probability_of_holding_area(
-                    board, source_name_int, lose_board.areas[source_name_str].get_dice(), self.player_name
+                    lose_board, source_name_int, lose_board.areas[source_name_str].get_dice(), self.player_name
                 )
                 lose_hold_prob.append((source_name_int, target_name_int, lose_hold_prob_coeff))
 
-                self.logger.debug(str(self.player_name) + " (" + str(source.get_dice()) + ", " +
-                                  str(target.get_dice()) + ")")
-                self.logger.debug("    " + str(attack_hold_coeff) + ", " + str(attack_prob) + ", " +
-                                  str(hold_prob) + ", " + str(diff_eval_win_coeff) + ", " +
-                                  str(diff_eval_lose_coeff) + ", " + str(lose_hold_prob_coeff) + "")
+                # self.logger.debug(str(self.player_name) + " (" + str(source.get_dice()) + ", " +
+                #                   str(target.get_dice()) + ")")
+                # self.logger.debug("    " + str(attack_hold_coeff) + ", " + str(attack_prob) + ", " +
+                #                   str(hold_source_prob) + ", " + str(hold_target_prob))
 
         # Sorting lists
 
@@ -113,6 +116,14 @@ class AI:
             possible_actions.append((source, target, action_coeff))
 
         possible_actions.sort(key=lambda tup: tup[2])
+
+        if possible_actions:
+            d = [tup for tup in attack_hold_prob if tup[0] == possible_actions[0][0] and tup[1] == possible_actions[0][1]][0][2]
+
+            # if board.areas[str(possible_actions[0][0])].get_dice() <= board.areas[str(possible_actions[0][1])].get_dice():
+            #     print(
+            #         board.areas[str(possible_actions[0][0])].get_dice(), board.areas[str(possible_actions[0][1])].get_dice(), d
+            #     )
 
         if possible_actions:
             return BattleCommand(possible_actions[0][0], possible_actions[0][1])
