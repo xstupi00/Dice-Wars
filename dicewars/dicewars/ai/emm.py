@@ -139,16 +139,16 @@ class AI:
 
     def get_command_more(self, board):
         # ATTACK_WEIGHT in (0.8, 0.2)
-        ATTACK_WEIGHT = {4: 0.45}
-        ATTACK_HOLD_THRESHOLD_MEAN = {4: 0.215}
-        DIFF_WIN_THRESHOLD_MEAN = {4: 0.0015}
+        ATTACK_WEIGHT = {4: 0.45, 5: 0.45}
+        ATTACK_HOLD_THRESHOLD_MEAN = {4: 0.245, 5: 0.245}
+        DIFF_WIN_THRESHOLD_MEAN = {4: 0.00175, 5: 0.00175}
 
         idx = self.get_alive_players(board)
 
         ATTACK_HOLD_THRESHOLD = random.uniform(ATTACK_HOLD_THRESHOLD_MEAN[idx] - 0.025,
                                                ATTACK_HOLD_THRESHOLD_MEAN[idx] + 0.025)
         DIFF_EVAL_THRESHOLD = random.uniform(DIFF_WIN_THRESHOLD_MEAN[idx] - 0.0005,
-                                            DIFF_WIN_THRESHOLD_MEAN[idx] + 0.0005)
+                                             DIFF_WIN_THRESHOLD_MEAN[idx] + 0.0005)
 
         HOLD_SOURCE_WEIGHT = 1 / 3 * (1 - ATTACK_WEIGHT[idx])
         HOLD_TARGET_WEIGHT = 2 / 3 * (1 - ATTACK_WEIGHT[idx])
@@ -202,9 +202,9 @@ class AI:
 
             # THRESHOLD
 
-            if (diff_eval_win_coeff > 2 * DIFF_EVAL_THRESHOLD and attack_prob > 0.4) or \
-               (attack_hold_coeff > ATTACK_HOLD_THRESHOLD and diff_eval_win_coeff > DIFF_EVAL_THRESHOLD and
-               attack_prob > 0.2) or attack_prob > 0.95:
+            if (((attack_hold_coeff > ATTACK_HOLD_THRESHOLD / 2 and diff_eval_win_coeff > 2 * DIFF_EVAL_THRESHOLD) or
+               (attack_hold_coeff > ATTACK_HOLD_THRESHOLD and diff_eval_win_coeff > DIFF_EVAL_THRESHOLD)) and
+               attack_prob > 0.25) or attack_prob > 0.975:
 
                 attack_hold_prob.append((source_name_int, target_name_int, attack_hold_coeff))
                 diff_eval_win.append((source_name_int, target_name_int, diff_eval_win_coeff))
@@ -286,10 +286,10 @@ class AI:
         # enemy: y = 1 - sqrt(x/n)
 
         if alive_players in (2, 3):
-            evaluation = (SCORE_WEIGHT/2 * math.sqrt((player_score / max_score) / max_score) +
-                          DICES_WEIGHT/2 * math.sqrt((player_dices / total_dices) / 8 * max_score) +
-                          SCORE_WEIGHT/2 * (1 - math.sqrt((enemies_score / max_score) / max_score)) +
-                          DICES_WEIGHT/2 * (1 - math.sqrt((enemies_dices / total_dices) / 8 * max_score))) / 4
+            evaluation = (SCORE_WEIGHT / 2 * math.sqrt((player_score / max_score) / max_score) +
+                          DICES_WEIGHT / 2 * math.sqrt((player_dices / total_dices) / 8 * max_score) +
+                          SCORE_WEIGHT / 2 * (1 - math.sqrt((enemies_score / max_score) / max_score)) +
+                          DICES_WEIGHT / 2 * (1 - math.sqrt((enemies_dices / total_dices) / 8 * max_score))) / 4
         else:
             evaluation = (SCORE_WEIGHT * math.sqrt((player_score / max_score) / max_score) +
                           DICES_WEIGHT * math.sqrt((player_dices / total_dices) / 8 * max_score)) / 2
