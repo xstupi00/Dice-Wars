@@ -12,7 +12,6 @@ class AI:
     """
 
     def __init__(self, player_name, board, players_order):
-        self.max_enemies_dec = 6
         self.player_name = player_name
         self.players_order = players_order
         self.logger = logging.getLogger('AI')
@@ -22,14 +21,18 @@ class AI:
 
     def get_command(self, board):
 
-        WIN_COEFF_DOWN_THRESHOLD = 0.1 + self.get_border_of_threshold(board) * 0.1
-        WIN_COEFF_UP_THRESHOLD = 0.15 + self.get_border_of_threshold(board) * 0.1
+        # (0.1, 0.15)
+        # (0.25, 0.3)
+        WIN_COEFF_DOWN_THRESHOLD = 0.1 + self.get_border_of_threshold(board) * 0.15
+        WIN_COEFF_UP_THRESHOLD = 0.15 + self.get_border_of_threshold(board) * 0.15
         WIN_COEFF_THRESHOLD = random.uniform(WIN_COEFF_DOWN_THRESHOLD, WIN_COEFF_UP_THRESHOLD)
 
-        # y = 0.1 * x
-        HOLD_WEIGHT = 0.1 + self.get_border_of_threshold(board) * 0.9
-        ATTACK_WEIGHT = 1 - HOLD_WEIGHT
+        # ATTACK_WEIGHT in (0.8, 0.2)
+        ATTACK_WEIGHT = 0.2 + 0.6 * self.get_aggresivity(board)
+        HOLD_SOURCE_WEIGHT = 1/3 * (1 - ATTACK_WEIGHT)
+        HOLD_TARGET_WEIGHT = 2/3 * (1 - ATTACK_WEIGHT)
 
+        # ATTACK_HOLD_WEIGHT in (0.5, 0.75)
         ATTACK_HOLD_WEIGHT = 0.75 - self.get_aggresivity(board) * 0.25
         DIFF_WIN_WEIGHT = (1 - ATTACK_HOLD_WEIGHT) / 2
         DIFF_LOSE_WEIGHT = (1 - ATTACK_HOLD_WEIGHT) / 4
@@ -41,6 +44,8 @@ class AI:
         lose_hold_prob = []
 
         current_eval = self.evaluate(board, self.player_name)
+
+        self.logger.debug("player " + str(self.player_name))
 
         for source, target in possible_attacks(board, self.player_name):
 
@@ -66,10 +71,10 @@ class AI:
             hold_source_prob = probability_of_holding_area(
                 win_board, source_name_int, win_board.areas[source_name_str].get_dice(), self.player_name
             )
-            attack_hold_coeff = (ATTACK_WEIGHT * attack_prob + 2 / 3 * HOLD_WEIGHT * hold_target_prob
-                                 + 1 / 3 * HOLD_WEIGHT * hold_source_prob) / 3
+            attack_hold_coeff = (ATTACK_WEIGHT * attack_prob + HOLD_TARGET_WEIGHT * hold_target_prob
+                                 + HOLD_SOURCE_WEIGHT * hold_source_prob) / 3
 
-            if attack_hold_coeff > WIN_COEFF_THRESHOLD and attack_prob > 0.19170096:
+            if (attack_hold_coeff > WIN_COEFF_THRESHOLD and attack_prob > 0.2) or (attack_prob > 0.95):
                 attack_hold_prob.append((source_name_int, target_name_int, attack_hold_coeff))
 
                 # 2) diff_eval_win
@@ -91,10 +96,14 @@ class AI:
                 )
                 lose_hold_prob.append((source_name_int, target_name_int, lose_hold_prob_coeff))
 
-                # self.logger.debug(str(self.player_name) + " (" + str(source.get_dice()) + ", " +
-                #                   str(target.get_dice()) + ")")
-                # self.logger.debug("    " + str(attack_hold_coeff) + ", " + str(attack_prob) + ", " +
-                #                   str(hold_source_prob) + ", " + str(hold_target_prob))
+                self.logger.debug("YES: (" + str(source.get_dice()) + ", " + str(target.get_dice()) + ")")
+                self.logger.debug("    " + str(attack_hold_coeff) + ", " + str(attack_prob) + ", " +
+                                  str(hold_source_prob) + ", " + str(hold_target_prob))
+
+            else:
+                self.logger.debug("NO: (" + str(source.get_dice()) + ", " + str(target.get_dice()) + ")")
+                self.logger.debug("    " + str(attack_hold_coeff) + ", " + str(attack_prob) + ", " +
+                                  str(hold_source_prob) + ", " + str(hold_target_prob))
 
         # Sorting lists
 
@@ -118,14 +127,6 @@ class AI:
         possible_actions.sort(key=lambda tup: tup[2])
 
         if possible_actions:
-            d = [tup for tup in attack_hold_prob if tup[0] == possible_actions[0][0] and tup[1] == possible_actions[0][1]][0][2]
-
-            # if board.areas[str(possible_actions[0][0])].get_dice() <= board.areas[str(possible_actions[0][1])].get_dice():
-            #     print(
-            #         board.areas[str(possible_actions[0][0])].get_dice(), board.areas[str(possible_actions[0][1])].get_dice(), d
-            #     )
-
-        if possible_actions:
             return BattleCommand(possible_actions[0][0], possible_actions[0][1])
         else:
             return EndTurnCommand()
@@ -138,11 +139,13 @@ class AI:
 
     def get_aggresivity(self, board):
         # y = 1 - sqrt(x/6 - 2/6)
-        return 1 - math.sqrt(self.get_alive_players(board) / self.max_enemies_dec - 2 / self.max_enemies_dec)
+        # return number in (1, 0)
+        return 1 - math.sqrt(self.get_alive_players(board) / 6 - 2 / 6)
 
     def get_border_of_threshold(self, board):
         # y = sqrt(x/6 - 2/6)
-        return math.sqrt(self.get_alive_players(board) / self.max_enemies_dec - 2 / self.max_enemies_dec)
+        # return number in (0, 1)
+        return math.sqrt(self.get_alive_players(board) / 6 - 2 / 6)
 
     def evaluate(self, board, player_name):
         """ Evaluate the state of the game from the player perspective
