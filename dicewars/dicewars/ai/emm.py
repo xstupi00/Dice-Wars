@@ -21,16 +21,21 @@ class AI:
 
     def get_command(self, board):
 
-        # (0.1, 0.15)
-        # (0.25, 0.3)
-        WIN_COEFF_DOWN_THRESHOLD = 0.1 + self.get_border_of_threshold(board) * 0.15
-        WIN_COEFF_UP_THRESHOLD = 0.15 + self.get_border_of_threshold(board) * 0.15
-        WIN_COEFF_THRESHOLD = random.uniform(WIN_COEFF_DOWN_THRESHOLD, WIN_COEFF_UP_THRESHOLD)
-
         # ATTACK_WEIGHT in (0.8, 0.2)
-        ATTACK_WEIGHT = 0.2 + 0.6 * self.get_aggresivity(board)
-        HOLD_SOURCE_WEIGHT = 1/3 * (1 - ATTACK_WEIGHT)
-        HOLD_TARGET_WEIGHT = 2/3 * (1 - ATTACK_WEIGHT)
+        ATTACK_WEIGHT = [0, 0, 0.8, 0.56, 0.45]
+        WIN_COEFF_DOWN = [0, 0, 0.1, 0.16, 0.19]
+        WIN_COEFF_UP = [0, 0, 0.5, 0.21, 0.24]
+
+        idx = self.get_alive_players(board)
+
+        WIN_COEFF_DOWN *= 1  # TEST
+        WIN_COEFF_UP *= 1  # TEST
+        ATTACK_WEIGHT *= 1  # TEST
+
+        WIN_COEFF_THRESHOLD = random.uniform(WIN_COEFF_DOWN[idx], WIN_COEFF_UP[idx])
+
+        HOLD_SOURCE_WEIGHT = 1/3 * (1 - ATTACK_WEIGHT[idx])
+        HOLD_TARGET_WEIGHT = 2/3 * (1 - ATTACK_WEIGHT[idx])
 
         # ATTACK_HOLD_WEIGHT in (0.5, 0.75)
         ATTACK_HOLD_WEIGHT = 0.75 - self.get_aggresivity(board) * 0.25

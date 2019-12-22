@@ -2,3 +2,6 @@
 env-sui/
 */logs/
 *__pycache__*
+
+*run.sh
+*dicewars-ai-only.py
