@@ -28,10 +28,6 @@ class AI:
 
         idx = self.get_alive_players(board)
 
-        WIN_COEFF_DOWN *= 1  # TEST
-        WIN_COEFF_UP *= 1  # TEST
-        ATTACK_WEIGHT *= 1  # TEST
-
         WIN_COEFF_THRESHOLD = random.uniform(WIN_COEFF_DOWN[idx], WIN_COEFF_UP[idx])
 
         HOLD_SOURCE_WEIGHT = 1/3 * (1 - ATTACK_WEIGHT[idx])
@@ -76,7 +72,7 @@ class AI:
             hold_source_prob = probability_of_holding_area(
                 win_board, source_name_int, win_board.areas[source_name_str].get_dice(), self.player_name
             )
-            attack_hold_coeff = (ATTACK_WEIGHT * attack_prob + HOLD_TARGET_WEIGHT * hold_target_prob
+            attack_hold_coeff = (ATTACK_WEIGHT[idx] * attack_prob + HOLD_TARGET_WEIGHT * hold_target_prob
                                  + HOLD_SOURCE_WEIGHT * hold_source_prob) / 3
 
             if (attack_hold_coeff > WIN_COEFF_THRESHOLD and attack_prob > 0.2) or (attack_prob > 0.95):
