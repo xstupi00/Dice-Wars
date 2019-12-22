@@ -16,6 +16,18 @@ class AI:
         self.players_order = players_order
         self.logger = logging.getLogger('AI')
 
+        # ATTACK_WEIGHT in (0.8, 0.2)
+        # y = 0.2 + 0.6 * (1 - sqrt(x/6 - 2/6))
+        self.ATTACK_WEIGHT = {2: 0.8, 3: 0.56, 4: 0.45, 5: 0.4}  # , 6: 0.31, 7: 0.25, 8: 0.2}
+
+        # ATTACK HOLD THRESHOLD MEAN in (0.125, 0.485)
+        # y = 0.06 * x + 0.005
+        self.ATTACK_HOLD_THRESHOLD_MEAN = {2: 0.125, 3: 0.185, 4: 0.245, 5: 0.2}  # , 6: 0.365, 7: 0.425, 8: 0.485}
+
+        # DIFF_WIN_THRESHOLD_MEAN
+        #
+        self.DIFF_WIN_THRESHOLD_MEAN = {4: 0.00175, 5: 0.0019}
+
     def ai_turn(self, board, nb_moves_this_turn, nb_turns_this_game, time_left):
         alive_players = self.get_alive_players(board)
 
@@ -27,16 +39,13 @@ class AI:
         return command
 
     def get_command_23(self, board):
-        ATTACK_WEIGHT = {2: 0.8, 3: 0.56}
-        WIN_COEFF_DOWN = {2: 0.1, 3: 0.16}
-        WIN_COEFF_UP = {2: 0.15, 3: 0.21}
-
         idx = self.get_alive_players(board)
 
-        WIN_COEFF_THRESHOLD = random.uniform(WIN_COEFF_DOWN[idx], WIN_COEFF_UP[idx])
+        WIN_COEFF_THRESHOLD = random.uniform(self.ATTACK_HOLD_THRESHOLD_MEAN[idx] - 0.025,
+                                             self.ATTACK_HOLD_THRESHOLD_MEAN[idx] + 0.025)
 
-        HOLD_SOURCE_WEIGHT = 1 / 3 * (1 - ATTACK_WEIGHT[idx])
-        HOLD_TARGET_WEIGHT = 2 / 3 * (1 - ATTACK_WEIGHT[idx])
+        HOLD_SOURCE_WEIGHT = 1 / 3 * (1 - self.ATTACK_WEIGHT[idx])
+        HOLD_TARGET_WEIGHT = 2 / 3 * (1 - self.ATTACK_WEIGHT[idx])
 
         # ATTACK_HOLD_WEIGHT in (0.5, 0.75)
         ATTACK_HOLD_WEIGHT = 0.75 - self.get_aggresivity(board) * 0.25
@@ -77,7 +86,7 @@ class AI:
             hold_source_prob = probability_of_holding_area(
                 win_board, source_name_int, win_board.areas[source_name_str].get_dice(), self.player_name
             )
-            attack_hold_coeff = (ATTACK_WEIGHT[idx] * attack_prob + HOLD_TARGET_WEIGHT * hold_target_prob
+            attack_hold_coeff = (self.ATTACK_WEIGHT[idx] * attack_prob + HOLD_TARGET_WEIGHT * hold_target_prob
                                  + HOLD_SOURCE_WEIGHT * hold_source_prob) / 3
 
             if (attack_hold_coeff > WIN_COEFF_THRESHOLD and attack_prob > 0.2) or (attack_prob > 0.95):
@@ -138,20 +147,16 @@ class AI:
             return EndTurnCommand()
 
     def get_command_more(self, board):
-        # ATTACK_WEIGHT in (0.8, 0.2)
-        ATTACK_WEIGHT = {4: 0.45, 5: 0.45}
-        ATTACK_HOLD_THRESHOLD_MEAN = {4: 0.245, 5: 0.245}
-        DIFF_WIN_THRESHOLD_MEAN = {4: 0.00175, 5: 0.00175}
 
         idx = self.get_alive_players(board)
 
-        ATTACK_HOLD_THRESHOLD = random.uniform(ATTACK_HOLD_THRESHOLD_MEAN[idx] - 0.025,
-                                               ATTACK_HOLD_THRESHOLD_MEAN[idx] + 0.025)
-        DIFF_EVAL_THRESHOLD = random.uniform(DIFF_WIN_THRESHOLD_MEAN[idx] - 0.0005,
-                                             DIFF_WIN_THRESHOLD_MEAN[idx] + 0.0005)
+        ATTACK_HOLD_THRESHOLD = random.uniform(self.ATTACK_HOLD_THRESHOLD_MEAN[idx] - 0.025,
+                                               self.ATTACK_HOLD_THRESHOLD_MEAN[idx] + 0.025)
+        DIFF_EVAL_THRESHOLD = random.uniform(self.DIFF_WIN_THRESHOLD_MEAN[idx] - 0.0005,
+                                             self.DIFF_WIN_THRESHOLD_MEAN[idx] + 0.0005)
 
-        HOLD_SOURCE_WEIGHT = 1 / 3 * (1 - ATTACK_WEIGHT[idx])
-        HOLD_TARGET_WEIGHT = 2 / 3 * (1 - ATTACK_WEIGHT[idx])
+        HOLD_SOURCE_WEIGHT = 1 / 3 * (1 - self.ATTACK_WEIGHT[idx])
+        HOLD_TARGET_WEIGHT = 2 / 3 * (1 - self.ATTACK_WEIGHT[idx])
 
         # ATTACK_HOLD_WEIGHT in (0.5, 0.75)
         ATTACK_HOLD_WEIGHT = 0.75 - self.get_aggresivity(board) * 0.25
@@ -192,7 +197,7 @@ class AI:
             hold_source_prob = probability_of_holding_area(
                 win_board, source_name_int, win_board.areas[source_name_str].get_dice(), self.player_name
             )
-            attack_hold_coeff = (ATTACK_WEIGHT[idx] * attack_prob + HOLD_TARGET_WEIGHT * hold_target_prob
+            attack_hold_coeff = (self.ATTACK_WEIGHT[idx] * attack_prob + HOLD_TARGET_WEIGHT * hold_target_prob
                                  + HOLD_SOURCE_WEIGHT * hold_source_prob) / 3
 
             # 2) diff_eval_win
