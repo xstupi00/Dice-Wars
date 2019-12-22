@@ -29,7 +29,7 @@ class AI:
     def get_command_23(self, board):
         ATTACK_WEIGHT = {2: 0.8, 3: 0.56}
         WIN_COEFF_DOWN = {2: 0.1, 3: 0.16}
-        WIN_COEFF_UP = {2: 0.5, 3: 0.21}
+        WIN_COEFF_UP = {2: 0.15, 3: 0.21}
 
         idx = self.get_alive_players(board)
 
@@ -139,9 +139,9 @@ class AI:
 
     def get_command_more(self, board):
         # ATTACK_WEIGHT in (0.8, 0.2)
-        ATTACK_WEIGHT = {3: 0.56, 4: 0.45}
-        ATTACK_HOLD_THRESHOLD_MEAN = {3: 0.1, 4: 0.215}
-        DIFF_WIN_THRESHOLD_MEAN = {3: 0.001, 4: 0.0015}
+        ATTACK_WEIGHT = {4: 0.45}
+        ATTACK_HOLD_THRESHOLD_MEAN = {4: 0.215}
+        DIFF_WIN_THRESHOLD_MEAN = {4: 0.0015}
 
         idx = self.get_alive_players(board)
 
