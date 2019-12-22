@@ -147,7 +147,7 @@ class AI:
 
         ATTACK_HOLD_THRESHOLD = random.uniform(ATTACK_HOLD_THRESHOLD_MEAN[idx] - 0.025,
                                                ATTACK_HOLD_THRESHOLD_MEAN[idx] + 0.025)
-        DIFF_WIN_THRESHOLD = random.uniform(DIFF_WIN_THRESHOLD_MEAN[idx] - 0.0005,
+        DIFF_EVAL_THRESHOLD = random.uniform(DIFF_WIN_THRESHOLD_MEAN[idx] - 0.0005,
                                             DIFF_WIN_THRESHOLD_MEAN[idx] + 0.0005)
 
         HOLD_SOURCE_WEIGHT = 1 / 3 * (1 - ATTACK_WEIGHT[idx])
@@ -202,8 +202,9 @@ class AI:
 
             # THRESHOLD
 
-            if (attack_hold_coeff > ATTACK_HOLD_THRESHOLD and diff_eval_win_coeff > DIFF_WIN_THRESHOLD and
-                    attack_prob > 0.2) or attack_prob > 0.95:
+            if (diff_eval_win_coeff > 2 * DIFF_EVAL_THRESHOLD and attack_prob > 0.4) or \
+               (attack_hold_coeff > ATTACK_HOLD_THRESHOLD and diff_eval_win_coeff > DIFF_EVAL_THRESHOLD and
+               attack_prob > 0.2) or attack_prob > 0.95:
 
                 attack_hold_prob.append((source_name_int, target_name_int, attack_hold_coeff))
                 diff_eval_win.append((source_name_int, target_name_int, diff_eval_win_coeff))
