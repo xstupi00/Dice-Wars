@@ -12,7 +12,7 @@ class AI:
     """
 
     def __init__(self, player_name, board, players_order):
-        self.enemies_dec = 6
+        self.max_enemies_dec = 6
         self.player_name = player_name
         self.players_order = players_order
         self.logger = logging.getLogger('AI')
@@ -26,8 +26,9 @@ class AI:
         WIN_COEFF_UP_THRESHOLD = 0.2 + self.get_border_of_threshold(board) * 0.2
         WIN_COEFF_THRESHOLD = random.uniform(WIN_COEFF_DOWN_THRESHOLD, WIN_COEFF_UP_THRESHOLD)
 
-        ATTACK_WEIGHT = 0.85
-        HOLD_WEIGHT = 0.15
+        # y = 0.1 * x
+        HOLD_WEIGHT = 0.1 * self.get_alive_players(board)
+        ATTACK_WEIGHT = 1 - HOLD_WEIGHT
 
         ATTACK_HOLD_WEIGHT = 0.75 - self.get_aggresivity(board) * 0.25
         DIFF_WIN_WEIGHT = (1 - ATTACK_HOLD_WEIGHT) / 2
@@ -86,9 +87,11 @@ class AI:
                 )
                 lose_hold_prob.append((source_name_int, target_name_int, lose_hold_prob_coeff))
 
-                self.logger.debug("(" + str(source.get_dice()) + ", " + str(target.get_dice()) + ", " + str(attack_hold_coeff) +
-                                  ", " + str(diff_eval_win_coeff) + ", " + str(diff_eval_lose_coeff) + ", " +
-                                  str(lose_hold_prob_coeff) + ")")
+                self.logger.debug(str(self.player_name) + " (" + str(source.get_dice()) + ", " +
+                                  str(target.get_dice()) + ")")
+                self.logger.debug("    " + str(attack_hold_coeff) + ", " + str(attack_prob) + ", " +
+                                  str(hold_prob) + ", " + str(diff_eval_win_coeff) + ", " +
+                                  str(diff_eval_lose_coeff) + ", " + str(lose_hold_prob_coeff) + "")
 
         # Sorting lists
 
@@ -117,18 +120,18 @@ class AI:
             return EndTurnCommand()
 
     @staticmethod
-    def get_alive_enemies(board):
+    def get_alive_players(board):
         enemies_alive = set()
         [enemies_alive.add(area.owner_name) for area in board.areas.values()]
         return len(enemies_alive)
 
     def get_aggresivity(self, board):
         # y = 1 - sqrt(x/6 - 2/6)
-        return 1 - math.sqrt(self.get_alive_enemies(board) / self.enemies_dec - 2 / self.enemies_dec)
+        return 1 - math.sqrt(self.get_alive_players(board) / self.max_enemies_dec - 2 / self.max_enemies_dec)
 
     def get_border_of_threshold(self, board):
         # y = sqrt(x/6 - 2/6)
-        return math.sqrt(self.get_alive_enemies(board) / self.enemies_dec - 2 / self.enemies_dec)
+        return math.sqrt(self.get_alive_players(board) / self.max_enemies_dec - 2 / self.max_enemies_dec)
 
     def evaluate(self, board, player_name):
         """ Evaluate the state of the game from the player perspective
