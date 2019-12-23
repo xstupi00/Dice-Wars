@@ -73,6 +73,11 @@ class AI:
 
             # 1) attack_hold_prob
             attack_prob = probability_of_successful_attack(board, source_name_int, target_name_int)
+
+            # We don't want to consider attacks with chance of successful under 20%
+            if attack_prob < 0.2:
+                continue
+
             hold_target_prob = probability_of_holding_area(
                 win_board, target_name_int, win_board.areas[target_name_str].get_dice(), self.player_name
             )
@@ -88,13 +93,14 @@ class AI:
 
             good_action = False
 
+            # Condition of good / not good attacks
             if alive_players in (2, 3):
-                if (attack_hold_coeff > WIN_COEFF_THRESHOLD and attack_prob > 0.2) or (attack_prob > 0.95):
+                if attack_hold_coeff > WIN_COEFF_THRESHOLD or attack_prob > 0.95:
                     good_action = True
             else:
-                if (((attack_hold_coeff > ATTACK_HOLD_THRESHOLD / 2 and diff_eval_win_coeff > 2 * DIFF_EVAL_THRESHOLD)
-                   or (attack_hold_coeff > ATTACK_HOLD_THRESHOLD and diff_eval_win_coeff > DIFF_EVAL_THRESHOLD)) and
-                   attack_prob > 0.25) or attack_prob > 0.975:
+                if (attack_hold_coeff > ATTACK_HOLD_THRESHOLD / 2 and diff_eval_win_coeff > 2 * DIFF_EVAL_THRESHOLD)
+                   or (attack_hold_coeff > ATTACK_HOLD_THRESHOLD and diff_eval_win_coeff > DIFF_EVAL_THRESHOLD)
+                   or attack_prob > 0.975:
                     good_action = True
 
             if good_action:
