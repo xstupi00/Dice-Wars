@@ -94,29 +94,34 @@ class AI:
             good_action = False
 
             # Condition of good / not good attacks
-            if alive_players in (2, 3):
+            if alive_players == 2:
                 if attack_hold_coeff > WIN_COEFF_THRESHOLD or attack_prob > 0.95:
                     good_action = True
             else:
-                if (attack_hold_coeff > ATTACK_HOLD_THRESHOLD / 2 and diff_eval_win_coeff > 2 * DIFF_EVAL_THRESHOLD)
-                   or (attack_hold_coeff > ATTACK_HOLD_THRESHOLD and diff_eval_win_coeff > DIFF_EVAL_THRESHOLD)
-                   or attack_prob > 0.975:
+                if (attack_hold_coeff > ATTACK_HOLD_THRESHOLD / 2 and diff_eval_win_coeff > 2 * DIFF_EVAL_THRESHOLD)\
+                   or (attack_hold_coeff > ATTACK_HOLD_THRESHOLD and diff_eval_win_coeff > DIFF_EVAL_THRESHOLD)\
+                   or attack_prob > 0.975\
+                   or self.check_next_turn(win_board, target, hold_source_prob):
                     good_action = True
 
             if good_action:
-                attack_hold_prob.append((source_name_int, target_name_int, attack_hold_coeff))
-                diff_eval_win.append((source_name_int, target_name_int, diff_eval_win_coeff))
+                rank = 0
+                if self.check_next_turn(win_board, target, hold_source_prob):
+                    rank = 2
+
+                attack_hold_prob.append((source_name_int, target_name_int, attack_hold_coeff*rank))
+                diff_eval_win.append((source_name_int, target_name_int, diff_eval_win_coeff*rank))
 
                 # 3) diff_eval_lose
                 lose_eval = self.evaluate(lose_board, self.player_name)
                 diff_eval_lose_coeff = lose_eval - current_eval
-                diff_eval_lose.append((source_name_int, target_name_int, diff_eval_lose_coeff))
+                diff_eval_lose.append((source_name_int, target_name_int, diff_eval_lose_coeff*rank))
 
                 # 4) lose_hold_prob
                 lose_hold_prob_coeff = probability_of_holding_area(
                     lose_board, source_name_int, lose_board.areas[source_name_str].get_dice(), self.player_name
                 )
-                lose_hold_prob.append((source_name_int, target_name_int, lose_hold_prob_coeff))
+                lose_hold_prob.append((source_name_int, target_name_int, lose_hold_prob_coeff*rank))
 
                 self.logger.debug("YES: (" + str(source.get_dice()) + ", " + str(target.get_dice()) + ")")
                 self.logger.debug("    attack_hold: " + str(attack_hold_coeff) + ", " + str(attack_prob) + ", " +
@@ -179,7 +184,7 @@ class AI:
         # me:    y = sqrt(x/n)
         # enemy: y = 1 - sqrt(x/n)
 
-        if alive_players in (2, 3):
+        if alive_players == 2:
             evaluation = (SCORE_WEIGHT / 2 * math.sqrt((player_score / max_score) / max_score) +
                           DICES_WEIGHT / 2 * math.sqrt((player_dices / total_dices) / 8 * max_score) +
                           SCORE_WEIGHT / 2 * (1 - math.sqrt((enemies_score / max_score) / max_score)) +
@@ -189,6 +194,20 @@ class AI:
                           DICES_WEIGHT * math.sqrt((player_dices / total_dices) / 8 * max_score)) / 2
 
         return evaluation
+
+    def check_next_turn(self, win_board, target, hold_prob):
+        # neighbours of current target area
+        if win_board.areas[str(target.get_name())].can_attack():
+            for neighbour in target.get_adjacent_areas():
+                neighbour = win_board.get_area(neighbour)
+                # if neighbour of current target is not my area
+                if neighbour.get_owner_name() != self.player_name and \
+                        probability_of_successful_attack(win_board, target.get_name(), neighbour.get_name()) > 0.4:
+                    # check whether the neighbour has neighbour which is in the my largest current region
+                    for potential_target in neighbour.get_adjacent_areas():
+                        if potential_target in self.get_largest_region(win_board) and hold_prob == 1.0:
+                            return True
+        return False
 
     @staticmethod
     def get_alive_players(board):
@@ -209,3 +228,9 @@ class AI:
         players_regions = board.get_players_regions(player_name, skip_area=skip_area)
         max_region_size = max(len(region) for region in players_regions)
         return max_region_size
+
+    def get_largest_region(self, board):
+        players_regions = board.get_players_regions(self.player_name)
+        max_region_size = max(len(region) for region in players_regions)
+        max_sized_regions = [region for region in players_regions if len(region) == max_region_size]
+        return max_sized_regions[0]
