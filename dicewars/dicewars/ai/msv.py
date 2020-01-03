@@ -55,8 +55,6 @@ class AI:
 
         current_eval = self.evaluate(board, self.player_name)
 
-        self.logger.debug("player " + str(self.player_name))
-
         for source, target in possible_attacks(board, self.player_name):
             win_board = copy.deepcopy(board)
             lose_board = copy.deepcopy(board)
@@ -101,12 +99,12 @@ class AI:
                 if (attack_hold_coeff > ATTACK_HOLD_THRESHOLD / 2 and diff_eval_win_coeff > 2 * DIFF_EVAL_THRESHOLD)\
                    or (attack_hold_coeff > ATTACK_HOLD_THRESHOLD and diff_eval_win_coeff > DIFF_EVAL_THRESHOLD)\
                    or attack_prob > 0.975\
-                   or self.check_next_turn(win_board, target, hold_source_prob):
+                   or self.check_next_turn(win_board, target, hold_target_prob):
                     good_action = True
 
             if good_action:
                 rank = 0
-                if self.check_next_turn(win_board, target, hold_source_prob):
+                if self.check_next_turn(win_board, target, hold_target_prob):
                     rank = 2
 
                 attack_hold_prob.append((source_name_int, target_name_int, attack_hold_coeff*rank))
@@ -122,17 +120,6 @@ class AI:
                     lose_board, source_name_int, lose_board.areas[source_name_str].get_dice(), self.player_name
                 )
                 lose_hold_prob.append((source_name_int, target_name_int, lose_hold_prob_coeff*rank))
-
-                self.logger.debug("YES: (" + str(source.get_dice()) + ", " + str(target.get_dice()) + ")")
-                self.logger.debug("    attack_hold: " + str(attack_hold_coeff) + ", " + str(attack_prob) + ", " +
-                                  str(hold_source_prob) + ", " + str(hold_target_prob))
-                self.logger.debug("    eval: " + str(diff_eval_win_coeff))
-
-            else:
-                self.logger.debug("NO: (" + str(source.get_dice()) + ", " + str(target.get_dice()) + ")")
-                self.logger.debug("    attack_hold: " + str(attack_hold_coeff) + ", " + str(attack_prob) + ", " +
-                                  str(hold_source_prob) + ", " + str(hold_target_prob))
-                self.logger.debug("    eval: " + str(diff_eval_win_coeff))
 
         # Sorting lists
         attack_hold_prob.sort(key=lambda tup: tup[2])
@@ -202,7 +189,7 @@ class AI:
                 neighbour = win_board.get_area(neighbour)
                 # if neighbour of current target is not my area
                 if neighbour.get_owner_name() != self.player_name and \
-                        probability_of_successful_attack(win_board, target.get_name(), neighbour.get_name()) > 0.4:
+                        probability_of_successful_attack(win_board, target.get_name(), neighbour.get_name()) > 0.2:
                     # check whether the neighbour has neighbour which is in the my largest current region
                     for potential_target in neighbour.get_adjacent_areas():
                         if potential_target in self.get_largest_region(win_board) and hold_prob == 1.0:
