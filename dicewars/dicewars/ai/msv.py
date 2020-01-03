@@ -121,11 +121,11 @@ class AI:
                 )
                 lose_hold_prob.append((source_name_int, target_name_int, lose_hold_prob_coeff*rank))
 
-        # Sorting lists
-        attack_hold_prob.sort(key=lambda tup: tup[2])
-        diff_eval_win.sort(key=lambda tup: tup[2])
-        diff_eval_lose.sort(key=lambda tup: tup[2])
-        lose_hold_prob.sort(key=lambda tup: tup[2])
+        # # Sorting lists
+        # attack_hold_prob.sort(key=lambda tup: tup[2])
+        # diff_eval_win.sort(key=lambda tup: tup[2])
+        # diff_eval_lose.sort(key=lambda tup: tup[2])
+        # lose_hold_prob.sort(key=lambda tup: tup[2])
 
         # List with possible actions
         possible_actions = []
@@ -166,12 +166,10 @@ class AI:
         enemies_score = sum(enemy["score"] for enemy in enemies.values())
         enemies_dices = sum(enemy["dices"] for enemy in enemies.values())
 
-        alive_players = self.get_alive_players(board)
-
         # me:    y = sqrt(x/n)
         # enemy: y = 1 - sqrt(x/n)
 
-        if alive_players == 2:
+        if self.get_alive_players(board) == 2:
             evaluation = (SCORE_WEIGHT / 2 * math.sqrt((player_score / max_score) / max_score) +
                           DICES_WEIGHT / 2 * math.sqrt((player_dices / total_dices) / 8 * max_score) +
                           SCORE_WEIGHT / 2 * (1 - math.sqrt((enemies_score / max_score) / max_score)) +
