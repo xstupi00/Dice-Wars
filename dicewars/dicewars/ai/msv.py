@@ -8,8 +8,6 @@ from dicewars.client.ai_driver import BattleCommand, EndTurnCommand
 
 
 class AI:
-    """ Expected Mini-Max
-    """
 
     def __init__(self, player_name, board, players_order):
         self.player_name = player_name
@@ -91,7 +89,7 @@ class AI:
 
             good_action = False
 
-            # Condition of good / not good attacks
+            # The treshhold of good / not good attacks
             if alive_players == 2:
                 if attack_hold_coeff > WIN_COEFF_THRESHOLD or attack_prob > 0.95:
                     good_action = True
